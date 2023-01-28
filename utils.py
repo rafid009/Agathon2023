@@ -24,7 +24,7 @@ def get_XY(df: pd.DataFrame, label, features):
             x = []
         if y_toggle:
             if len(y) != 0:
-                print(f"y_len: {len(y)}")
+                # print(f"y_len: {len(y)}")
                 Y.append(y)
             y = []
             y_toggle = False
@@ -41,12 +41,13 @@ def get_XY(df: pd.DataFrame, label, features):
         for pad in range(pads):
             y.append(0.0)
         Y.append(y)
-    return np.array(X), np.array(Y)
+    return np.array(X, dtype=np.float32), np.array(Y, dtype=np.float32)
 
 def get_time_series_data(df: pd.DataFrame):
     label = 'precipitation'
     features = df.columns.values.tolist()
     features.remove(label)
+    features.remove("date")
     X, Y = get_XY(df, label=label, features=features)
     return X, Y
 
@@ -62,3 +63,6 @@ def get_mean_std(X):
     mean = np.array(mean)
     std = np.array(std)
     return mean, std
+
+def get_normalized_data(X, mean, std):
+    return (X - mean) / std
