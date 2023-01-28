@@ -45,9 +45,7 @@ def get_XY(df: pd.DataFrame, label, features):
 
 def get_time_series_data(df: pd.DataFrame):
     label = 'precipitation'
-    features = df.columns.values.tolist()
-    features.remove(label)
-    features.remove("date")
+    features = get_features(df, label)
     X, Y = get_XY(df, label=label, features=features)
     return X, Y
 
@@ -66,3 +64,9 @@ def get_mean_std(X):
 
 def get_normalized_data(X, mean, std):
     return (X - mean) / std
+
+def get_features(df, label):
+    features = df.columns.values.tolist()
+    features.remove(label)
+    features.remove("date")
+    return features
