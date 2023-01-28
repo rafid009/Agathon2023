@@ -49,3 +49,16 @@ def get_time_series_data(df: pd.DataFrame):
     features.remove(label)
     X, Y = get_XY(df, label=label, features=features)
     return X, Y
+
+def get_mean_std(X):
+    mean = []
+    std = []
+    data = X.reshape((-1, X.shape[2]))
+    for feature in range(X.shape[2]):
+        season_npy = data[feature]
+        idx = np.where(~np.isnan(season_npy))
+        mean.append(np.mean(season_npy[idx]))
+        std.append(np.std(season_npy[idx]))
+    mean = np.array(mean)
+    std = np.array(std)
+    return mean, std
