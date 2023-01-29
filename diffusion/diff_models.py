@@ -363,6 +363,7 @@ class diff_SAITS(nn.Module):
             enc_output = self.dropout(self.position_enc_x(input_X_for_first))
         else:
             input_X_for_first = torch.cat([X, masks], dim=3)
+            print(input_X_for_first.shape)
             input_X_for_first = self.embedding_1(input_X_for_first)
             enc_output_x = self.dropout(self.position_enc_x(input_X_for_first[:, 0, :, :]))  # namely, term e in the math equation
             enc_output_mask = self.dropout(self.position_enc_mask(input_X_for_first[:, 1, :, :]))

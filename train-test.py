@@ -106,7 +106,7 @@ def evaluate_imputation(df, mean, std, models, mse_folder, test_idx=-1, trials=3
 def evaluate_imputation_predictive(df, mean, std, models, mse_folder, test_idx=-1):
     pass    
 
-def run_train_test (df, model_type, config_dict, mse_folder, model_folder, n_test=5, seed=0):
+def run_train_test (df, config_dict, mse_folder, model_folder, n_test=5, seed=0):
 
     # Set random seed for reproducibility
     random.seed(seed)
@@ -120,46 +120,42 @@ def run_train_test (df, model_type, config_dict, mse_folder, model_folder, n_tes
     test_indices = random.sample(list(range(n_instances)), n_test)
     print(test_indices)
 
+
     # Loop through each randomly selected test indices
     for test_idx in test_indices:
         
-      
-        if (model_type=='predictive'): # Check if predictive model
-            X, Y, mean, std = utils.preprocess_and_normalize(df) 
-            evaluate_imputation_predictive(df, mean, std, models, mse_folder, test_idx=test_idx) # Needs to be implemented
         
 
-        elif (model_type=='generative'): # Check if generative model
             
-            X_train, X_test, mean, std  = get_X_mean_std(df)
+        X_train, X_test, mean, std  = get_X_mean_std(df, test_idx=test_idx)
             
-            config_dict_diffsaits = config_dict
+        config_dict_diffsaits = config_dict
 
-            train_loader, valid_loader = get_dataloader(
-                X_train,
-                X_test,
-                mean,
-                std,
-                seed=seed,
-                batch_size=config_dict_diffsaits["train"]["batch_size"],
+        train_loader, valid_loader = get_dataloader(
+            X_train,
+            X_test,
+            mean,
+            std,
+            seed=seed,
+            batch_size=config_dict_diffsaits["train"]["batch_size"],
             missing_ratio=0.2,
-            )
+        )
             
-            model_diff_saits = CSDI_Precipitation(config_dict_diffsaits, device, target_dim=len(given_features)).to(device)    
-            model_diff_saits.load_state_dict(torch.load(f"{model_folder}/model_diffsaits.pth"))
-            models = {
-                'DiffSAITS': model_diff_saits
-            }            
-            train(
-                model_diff_saits,
-                config_dict_diffsaits["train"],
-                train_loader,
-                valid_loader=valid_loader,
-                foldername=model_folder,
-                filename="model_diffsaits.pth"
-            )
+        model_diff_saits = CSDI_Precipitation(config_dict_diffsaits, device, target_dim=len(real_features)).to(device)    
+        #model_diff_saits.load_state_dict(torch.load(f"{model_folder}/model_diffsaits.pth"))
+        models = {
+            'DiffSAITS': model_diff_saits
+        }            
+        train(
+            model_diff_saits,
+            config_dict_diffsaits["train"],
+            train_loader,
+            valid_loader=valid_loader,
+            foldername=model_folder,
+            filename="model_diffsaits.pth"
+        )
             
-            evaluate_imputation(df, mean, std, models, mse_folder, test_idx=test_idx, given_features=['precipitation'])
+        evaluate_imputation(df, mean, std, models, mse_folder, test_idx=test_idx, given_features=['precipitation'])
 
 
 data_file = '../../DATA/waterchallenge/MainData/00_all_ClimateIndices_and_precip.csv'
@@ -169,11 +165,15 @@ df = pd.read_csv(data_file)
 mse_folder = "../results_mse_precip"
 model_folder = "./saved_model"
 
+
+
+real_features = get_features(df)
+
 given_features = ['precipitation']
 
 config_dict_diffsaits = {
     'train': {
-        'epochs': 500,
+        'epochs': 1500,
         'batch_size': 32,
         'lr': 0.0009
     },      
@@ -195,7 +195,7 @@ config_dict_diffsaits = {
         'type': 'SAITS',
         'n_layers': 3, 
         'd_time': 12,
-        'n_feature': len(given_features),
+        'n_feature': len(real_features),
         'd_model': 256,
         'd_inner': 128,
         'n_head': 4,
@@ -208,9 +208,9 @@ config_dict_diffsaits = {
 
 
 
+seed = 0
+n_test = 5
+
 # Generative model
-run_train_test(df, 'generative', config_dict_diffsaits, mse_folder, model_folder, n_test=5, seed=0)
+run_train_test(df, config_dict_diffsaits, mse_folder, model_folder, n_test=n_test, seed=seed)
 
-
-# Predictive model
-#run_train_test(df, model_type='predictive', n_test=5, random_state=0)
