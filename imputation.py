@@ -10,11 +10,6 @@ import os
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-
-
-
-
-
 def train_imputation_model(X, model_file_dir='./saved_model/'):
     if not os.path.isdir(model_file_dir):
         os.makedirs(model_file_dir)
