@@ -175,7 +175,7 @@ models = {
 }
 mse_folder = "../results_mse_precip"
 
-evaluate_imputation(df, mean, std, models, mse_folder, test_idx=-2, given_features=given_features)
+evaluate_imputation(df, mean, std, models, mse_folder, test_idx=-2, given_features=["precipitation"])
 # evaluate_imputation(df, mean, std, models, mse_folder, test_idx=-2, given_features=given_features, trials=1)
 
 # lengths = [20]#[10, 25, 40, 45]
