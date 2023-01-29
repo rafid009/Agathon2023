@@ -97,6 +97,9 @@ def get_X_test(df, test_idx=-1):
     X_test = np.expand_dims(X[test_idx], axis=0)
     return X_test
 
+def dernormalize(X, mean, std):
+    return (X * std) + mean
+
 def train(
     model,
     config,

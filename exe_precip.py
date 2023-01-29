@@ -28,7 +28,7 @@ class NumpyArrayEncoder(JSONEncoder):
 
 # given_features = ['sin', 'cos2', 'harmonic', 'weight', 'lin_comb', 'non_lin_comb']
 
-def evaluate_imputation(df, mean, std, models, mse_folder, test_idx=-1, trials=30):
+def evaluate_imputation(df, mean, std, models, mse_folder, test_idx=-1, trials=30, given_features=['precipitation']):
     # given_features = given_features = ['sin', 'cos2', 'harmonic', 'weight', 'inv'] 
     nsample = 50
     # trials = 30
@@ -50,7 +50,7 @@ def evaluate_imputation(df, mean, std, models, mse_folder, test_idx=-1, trials=3
         eval_points = eval_points.permute(0, 2, 1)
         observed_points = observed_points.permute(0, 2, 1)
         samples_diff_saits_mean = samples_diff_saits.mean(dim=1)
-        print()
+        print(f"mean: {mean}\nstd: {std}")
         if trials == 1:
             results[j] = {
                 'target mask': eval_points[0, :, :].cpu().numpy(),
@@ -59,19 +59,18 @@ def evaluate_imputation(df, mean, std, models, mse_folder, test_idx=-1, trials=3
                 'diff_saits_samples': samples_diff_saits[0].cpu().numpy(),
             }
         else:
-
             for feature in given_features:
+                print(f"For feature: {feature}")
                 feature_idx = given_features.index(feature)
                 if eval_points[0, :, feature_idx].sum().item() == 0:
                     continue
-
                 mse_diff_saits = ((samples_diff_saits_mean[0, :, feature_idx] - c_target[0, :, feature_idx]) * eval_points[0, :, feature_idx]) ** 2
                 mse_diff_saits = mse_diff_saits.sum().item() / eval_points[0, :, feature_idx].sum().item()
                 if feature not in mse_diff_saits_total.keys():
                     mse_diff_saits_total[feature] = {"mean": mse_diff_saits}
                 else:
                     mse_diff_saits_total[feature]["mean"] += mse_diff_saits
-
+                print(f"MSE: {mse_diff_saits_total[feature]['mean']}")
                 # for k in range(samples_diff_saits.shape[1]):
                 #     mse_diff_saits = ((samples_diff_saits[0, k, :, feature_idx] - c_target[0, :, feature_idx]) * eval_points[0, :, feature_idx]) ** 2
                 #     mse_diff_saits = mse_diff_saits.sum().item() / eval_points[0, :, feature_idx].sum().item()
@@ -84,6 +83,8 @@ def evaluate_imputation(df, mean, std, models, mse_folder, test_idx=-1, trials=3
                 #             mse_diff_saits_total[feature][str(k)] += mse_diff_saits
                 
     for feature in given_features:
+        if feature not in mse_diff_saits_total.keys():
+            continue
         print(f"\n\tFor feature = {feature}\n\tDiffSAITS mse: {mse_diff_saits_total[feature]['mean']}")
 
     season_avg_mse = {
@@ -93,11 +94,11 @@ def evaluate_imputation(df, mean, std, models, mse_folder, test_idx=-1, trials=3
     if not os.path.isdir(mse_folder):
         os.makedirs(mse_folder)
     if trials == 1:
-        fp = open(f"{mse_folder}/all-sample-results.json", "w")
+        fp = open(f"{mse_folder}/all-sample-results_denorm.json", "w")
         json.dump(results, fp=fp, indent=4, cls=NumpyArrayEncoder)
         fp.close()
     else:
-        out_file = open(f"{mse_folder}/model_mse.json", "w")
+        out_file = open(f"{mse_folder}/model_mse_denorm.json", "w")
         json.dump(season_avg_mse, out_file, indent = 4)
         out_file.close()
 
@@ -109,7 +110,7 @@ given_features = get_features(df)
 
 config_dict_diffsaits = {
     'train': {
-        'epochs': 500,
+        'epochs': 1500,
         'batch_size': 32,
         'lr': 0.0009
     },      
@@ -120,7 +121,7 @@ config_dict_diffsaits = {
         'diffusion_embedding_dim': 128,
         'beta_start': 0.0001,
         'beta_end': 0.5,
-        'num_steps': 100,
+        'num_steps': 60,
         'schedule': "quad"
     },
     'model': {
@@ -159,14 +160,14 @@ train_loader, valid_loader = get_dataloader(
 model_diff_saits = CSDI_Precipitation(config_dict_diffsaits, device, target_dim=len(given_features)).to(device)
 model_diff_saits.load_state_dict(torch.load(f"{model_folder}/model_diffsaits.pth"))
 
-train(
-    model_diff_saits,
-    config_dict_diffsaits["train"],
-    train_loader,
-    valid_loader=valid_loader,
-    foldername=model_folder,
-    filename="model_diffsaits.pth"
-)
+# train(
+#     model_diff_saits,
+#     config_dict_diffsaits["train"],
+#     train_loader,
+#     valid_loader=valid_loader,
+#     foldername=model_folder,
+#     filename="model_diffsaits.pth"
+# )
 
 
 models = {
@@ -174,7 +175,8 @@ models = {
 }
 mse_folder = "../results_mse_precip"
 
-evaluate_imputation(df, mean, std, models, mse_folder, test_idx=-1)
+evaluate_imputation(df, mean, std, models, mse_folder, test_idx=-2, given_features=given_features)
+# evaluate_imputation(df, mean, std, models, mse_folder, test_idx=-2, given_features=given_features, trials=1)
 
 # lengths = [20]#[10, 25, 40, 45]
 # print("For All")

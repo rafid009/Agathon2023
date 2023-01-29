@@ -76,3 +76,6 @@ def preprocess_and_normalize(df: pd.DataFrame):
     mean, std = get_mean_std(X)
     X = get_normalized_data(X, mean, std)
     return X, Y, mean, std
+
+def dernormalize(X, mean, std):
+    return (X * std) + mean
