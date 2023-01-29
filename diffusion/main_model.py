@@ -268,6 +268,8 @@ class CSDI_base(nn.Module):
             for_pattern_mask,
             _, _, _
         ) = self.process_data(batch)
+
+        print(observed_data.shape)
         if is_train == 0:
             cond_mask = gt_mask
         elif self.target_strategy != "random":
@@ -277,7 +279,9 @@ class CSDI_base(nn.Module):
         else:
             cond_mask = self.get_randmask(observed_mask)
         # print(f"cond: {cond_mask.shape}")
-        side_info = self.get_side_info(observed_tp, cond_mask)
+        
+        #side_info = self.get_side_info(observed_tp, cond_mask)
+        side_info = None
         loss_func = self.calc_loss if is_train == 1 else self.calc_loss_valid
         return loss_func(observed_data, cond_mask, observed_mask, side_info, is_train)
 
