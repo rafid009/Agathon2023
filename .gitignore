@@ -129,3 +129,5 @@ dmypy.json
 .pyre/
 
 /AgAthon2023_data/
+/preprocessed_data/
+
