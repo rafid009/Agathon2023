@@ -1,3 +1,5 @@
+
+import os
 import xarray as xr
 
 
@@ -5,6 +7,8 @@ import xarray as xr
 datapath = "./AgAthon2023_data/ERA5_monthly_gridded/"
 preprocessed_datapath = "./preprocessed_data/"
 
+if not os.path.isdir(preprocessed_datapath):
+        os.makedirs(preprocessed_datapath)
 
 vars = ['sst','swvl1','swvl2','swvl3','swvl4','siconc']
 vars = ['sst']
@@ -18,5 +22,6 @@ for var in vars:
         gribfile = "adaptor.mars.internal_SeaIceCover_1980_2021_Jan_Dec.grib"
         
     ds = xr.open_dataset(f"{datapath}{gribfile}", engine="cfgrib", backend_kwargs={'filter_by_keys': {'shortName': var}})
-    
-    del ds
+    ds_dataframe = ds.to_dataframe()
+    ds_dataframe.to_csv(f'{preprocessed_datapath}{var}.csv')
+    del ds, ds_dataframe
