@@ -30,7 +30,6 @@ if __name__ == "__main__":
     X, Y, mean, std = preprocess_and_normalize(raw_data)
 
     print(f"X: {X}\nmean: {mean}\nstd: {std}")
-
     # Set sequence length given from get_time_series_data
     seq_length = X.shape[1]
 
@@ -84,6 +83,7 @@ if __name__ == "__main__":
     lr_scheduler = optim.lr_scheduler.MultiStepLR(
         optimizer, milestones=[p1, p2], gamma=0.1
     )
+
     avg_loss = 0
     for epoch in range(num_epochs):
         model.train()
@@ -122,6 +122,7 @@ if __name__ == "__main__":
     # if not os.path.isdir(model_folder):
     #     os.makedirs(model_folder)
     # torch.save(model.state_dict(), f"{model_folder}/lstm_model.pth")
+
 
     # out,hidden = lstm(pt.from_numpy(X_norm),hidden)
     # print("out: ",out)
