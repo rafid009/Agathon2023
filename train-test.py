@@ -51,7 +51,6 @@ def evaluate_imputation(df, mean, std, models, mse_folder, test_idx=-1, trials=3
         eval_points = eval_points.permute(0, 2, 1)
         observed_points = observed_points.permute(0, 2, 1)
         samples_diff_saits_mean = samples_diff_saits.mean(dim=1)
-        print(f"mean: {mean}\nstd: {std}")
         if trials == 1:
             results[j] = {
                 'target mask': eval_points[0, :, :].cpu().numpy(),

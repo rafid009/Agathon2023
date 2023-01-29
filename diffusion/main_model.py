@@ -94,18 +94,18 @@ class CSDI_base(nn.Module):
         
         for i in range(len(cond_mask)):
             
-            bm_choice = np.random.rand()
-            if bm_choice > 0.5:
-                rate = 0.3
-                length = len(cond_mask[i])
-                start_idx = np.random.randint(0, length - int(length*rate))
-                cond_mask[i][start_idx:(start_idx + int(length*rate))] = 0
+            # bm_choice = np.random.rand()
+            # if bm_choice > 0.5:
+            #     rate = 0.3
+            #     length = len(cond_mask[i])
+            #     start_idx = np.random.randint(0, length - int(length*rate))
+            #     cond_mask[i][start_idx:(start_idx + int(length*rate))] = 0
+            # else:
+            mask_choice = np.random.rand()
+            if self.target_strategy == "mix" and mask_choice > 0.5:
+                cond_mask[i] = rand_mask[i]
             else:
-                mask_choice = np.random.rand()
-                if self.target_strategy == "mix" and mask_choice > 0.5:
-                    cond_mask[i] = rand_mask[i]
-                else:
-                    cond_mask[i] = cond_mask[i] * for_pattern_mask[i - 1]
+                cond_mask[i] = cond_mask[i] * for_pattern_mask[i - 1]
         
         return cond_mask
 
@@ -268,8 +268,6 @@ class CSDI_base(nn.Module):
             for_pattern_mask,
             _, _, _
         ) = self.process_data(batch)
-
-        print(observed_data.shape)
         if is_train == 0:
             cond_mask = gt_mask
         elif self.target_strategy != "random":
@@ -279,9 +277,7 @@ class CSDI_base(nn.Module):
         else:
             cond_mask = self.get_randmask(observed_mask)
         # print(f"cond: {cond_mask.shape}")
-        
-        #side_info = self.get_side_info(observed_tp, cond_mask)
-        side_info = None
+        side_info = self.get_side_info(observed_tp, cond_mask)
         loss_func = self.calc_loss if is_train == 1 else self.calc_loss_valid
         return loss_func(observed_data, cond_mask, observed_mask, side_info, is_train)
 
