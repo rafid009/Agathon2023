@@ -70,3 +70,9 @@ def get_features(df, label):
     features.remove(label)
     features.remove("date")
     return features
+
+def preprocess_and_normalize(df: pd.DataFrame):
+    X, Y = get_time_series_data(df)
+    mean, std = get_mean_std(X)
+    X = get_normalized_data(X, mean, std)
+    return X, Y, mean, std
